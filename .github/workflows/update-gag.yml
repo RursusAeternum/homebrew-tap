@@ -1,0 +1,32 @@
+name: update gag
+
+# Keeps Casks/gag.rb pointing at the latest GitAGarden release. Runs hourly
+# and on demand; uses this repo's own token, so no cross-repo PAT is needed.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render cask from the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: sh scripts/update-gag.sh
+      - name: Commit if changed
+        run: |
+          git add Casks/gag.rb
+          if git diff --cached --quiet; then
+            echo "cask already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "gag $(sed -n 's/^  version "\(.*\)"/\1/p' Casks/gag.rb)"
+          git push
