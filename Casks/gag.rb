@@ -36,9 +36,10 @@ cask "gag" do
   binary "gag"
 
   # The binary isn't notarized; without this macOS refuses to run it.
-  postflight do
-    if OS.mac?
-      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/gag"]
+  postflight_steps do
+    on_macos do
+      run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}/gag"],
+                            writable_paths: ["gag"]
     end
   end
 end
